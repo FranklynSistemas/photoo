@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:provider/provider.dart';
-import 'folder_state.dart';
+import 'app_state.dart';
 
 class FolderPicker extends StatelessWidget {
   const FolderPicker({super.key});
@@ -9,7 +9,7 @@ class FolderPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Access the current folder path from FolderState
-    final folderState = Provider.of<FolderState>(context);
+    final folderState = Provider.of<AppState>(context);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

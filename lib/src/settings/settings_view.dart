@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:photoo/src/settings/widget_position.dart';
 import 'package:provider/provider.dart';
 
 import 'settings_controller.dart';
 import 'settings_select_directory.dart';
-import 'folder_state.dart';
+import 'app_state.dart';
 
 /// Displays the various settings that can be customized by the user.
 ///
@@ -19,7 +20,7 @@ class SettingsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Access the current folder path from FolderState
-    final folderState = Provider.of<FolderState>(context);
+    final appState = Provider.of<AppState>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -73,25 +74,106 @@ class SettingsView extends StatelessWidget {
                         textAlign: TextAlign
                             .left, // Aligns the text within its natural size
                         style: TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 16 // Makes the text bold
-                        )),
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16 // Makes the text bold
+                            )),
                     const SizedBox(
                         width:
                             8), // Adds a small gap between the text and the slider
                     Expanded(
                       child: Slider(
-                        value: folderState.transitionTime,
+                        value: appState.transitionTime,
                         max: 10,
                         min: 1,
                         divisions: 10,
-                        label: folderState.transitionTime.round().toString(),
+                        label: appState.transitionTime.round().toString(),
                         onChanged: (double value) {
-                          folderState.setTransitionTime(value);
+                          appState.setTransitionTime(value);
                         },
                       ),
                     ),
-                    Text("${folderState.transitionTime.round()} min")
+                    Text("${appState.transitionTime.round()} min")
+                  ],
+                )),
+            const SizedBox(height: 10),
+            Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text("Show analog clock:",
+                        textAlign: TextAlign
+                            .left, // Aligns the text within its natural size
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16 // Makes the text bold
+                            )),
+                    const SizedBox(
+                        width:
+                            8), // Adds a small gap between the text and the slider
+                    Switch(
+                      // This bool value toggles the switch.
+                      value: appState.showClock,
+                      activeColor: Colors.blueGrey,
+                      onChanged: (bool value) {
+                        // This is called when the user toggles the switch.
+                        appState.setShowClock(value);
+                      },
+                    ),
+                  ],
+                )),
+            const SizedBox(height: 10),
+            Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text("Analog clock position:",
+                        textAlign: TextAlign
+                            .left, // Aligns the text within its natural size
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16 // Makes the text bold
+                            )),
+                    const SizedBox(
+                        width:
+                            8), // Adds a small gap between the text and the slider
+                    WidgetPositionSelector(
+                        blockedPositions: [appState.dayWetherPosition],
+                        selectedPosition: appState.clockPosition,
+                        onPositionSelected: (newPosition) {
+                          appState.setClockPosition(newPosition);
+                        }),
+                  ],
+                )),
+            const SizedBox(height: 10),
+            Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Text("Day and wether:",
+                        textAlign: TextAlign
+                            .left, // Aligns the text within its natural size
+                        style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 16 // Makes the text bold
+                            )),
+                    const SizedBox(
+                        width:
+                            8), // Adds a small gap between the text and the slider
+                    WidgetPositionSelector(
+                        blockedPositions: [
+                          appState.clockPosition,
+                          Positions.center
+                        ],
+                        selectedPosition: appState.dayWetherPosition,
+                        onPositionSelected: (newPosition) {
+                          appState.setDayWetherPosition(newPosition);
+                        }),
                   ],
                 ))
           ],
