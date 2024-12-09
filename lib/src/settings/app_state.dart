@@ -16,6 +16,7 @@ enum Positions {
 }
 
 class AppState extends ChangeNotifier {
+  // State definition
   Timer? _presentationTimer;
   String? _selectedFolder;
   double _transitionTime = 1;
@@ -23,16 +24,20 @@ class AppState extends ChangeNotifier {
   File? _image;
   Positions _clockPosition = Positions.center;
   bool _showClock = false;
-  Positions _dayWetherPosition = Positions.bottomRight;
+  Positions _dayWeatherPosition = Positions.bottomRight;
+  TimeOfDay _onTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _offTime = const TimeOfDay(hour: 23, minute: 0);
 
+  // State getters
   String? get selectedFolder => _selectedFolder;
   double get transitionTime => _transitionTime;
-
   List<File> get images => _images;
   File? get image => _image; // Nullable getter
   Positions get clockPosition => _clockPosition;
   bool get showClock => _showClock;
-  Positions get dayWetherPosition => _dayWetherPosition;
+  Positions get dayWeatherPosition => _dayWeatherPosition;
+  TimeOfDay get onTime => _onTime;
+  TimeOfDay get offTime => _offTime;
 
   AppState() {
     _initializeState(); // Use an async initialization pattern
@@ -47,6 +52,7 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  // State setters
   void setShowClock(bool newValue) {
     _showClock = newValue;
     _saveShowClock();
@@ -59,9 +65,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setDayWetherPosition(Positions newPosition) {
-    _dayWetherPosition = newPosition;
-    _saveDayWetherPosition();
+  void setDayWeatherPosition(Positions newPosition) {
+    _dayWeatherPosition = newPosition;
+    _saveDayWeatherPosition();
+    notifyListeners();
+  }
+
+  void setOnTime(TimeOfDay newOnTime) {
+    _onTime = newOnTime;
+    _saveOnTime();
+    notifyListeners();
+  }
+
+  void setOffTime(TimeOfDay newOffTime) {
+    _offTime = newOffTime;
+    _saveOffTime();
     notifyListeners();
   }
 
@@ -107,7 +125,7 @@ class AppState extends ChangeNotifier {
       int index = 0;
       setImage(_images.first);
       _presentationTimer = Timer.periodic(
-        Duration(seconds: _transitionTime.toInt() * 5),
+        Duration(seconds: _transitionTime.toInt() * 60),
         (timer) {
           setImage(_images[index]);
           index = (index + 1) % _images.length;
@@ -185,6 +203,24 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  Future<TimeOfDay> _loadTime(String time) async {
+    final prefs = await SharedPreferences.getInstance();
+    // Get the string from SharedPreferences
+    String? timeString = prefs.getString(time);
+
+    if (timeString != null) {
+      // Deserialize the string to TimeOfDay
+      List<String> parts = timeString.split(':');
+      int hour = int.parse(parts[0]);
+      int minute = int.parse(parts[1]);
+      return TimeOfDay(hour: hour, minute: minute);
+    }
+    if (time == 'onTime') {
+      return const TimeOfDay(hour: 9, minute: 0);
+    }
+    return const TimeOfDay(hour: 23, minute: 0); // Return null if not found
+  }
+
   // Load selected folder from shared preferences
   Future<void> _loadSavedPreferences() async {
     final prefs = await SharedPreferences.getInstance();
@@ -195,12 +231,23 @@ class AppState extends ChangeNotifier {
     if (clockPositionString != null) {
       _clockPosition = Positions.values.firstWhere(
         (e) => e.toString().split('.').last == clockPositionString,
-        orElse: () => Positions
-            .center, // Default to Positions.center if not found
+        orElse: () =>
+            Positions.center, // Default to Positions.center if not found
       );
     } else {
       _clockPosition = Positions.center; // Default if no saved value
     }
+    String? dayWeatherPositionString = prefs.getString('dayWeatherPosition');
+    if (dayWeatherPositionString != null) {
+      _dayWeatherPosition = Positions.values.firstWhere(
+        (e) => e.toString().split('.').last == dayWeatherPositionString,
+        orElse: () => Positions.bottomRight,
+      );
+    } else {
+      _dayWeatherPosition = Positions.bottomRight;
+    }
+    _onTime = await _loadTime('onTime');
+    _offTime = await _loadTime('offTime');
     notifyListeners();
   }
 
@@ -222,8 +269,26 @@ class AppState extends ChangeNotifier {
     prefs.setString('clockPosition', _clockPosition.toString().split('.').last);
   }
 
-  Future<void> _saveDayWetherPosition() async {
+  // Save day weather position
+  Future<void> _saveDayWeatherPosition() async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString('dayWetherPosition', _dayWetherPosition.toString().split('.').last);
+    prefs.setString(
+        'dayWeatherPosition', _dayWeatherPosition.toString().split('.').last);
+  }
+
+  // Save onTime position
+  Future<void> _saveOnTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Serialize TimeOfDay to a string
+    String onTimeString = '${_onTime.hour}:${_onTime.minute}';
+    prefs.setString('onTime', onTimeString);
+  }
+
+  // Save offTime position
+  Future<void> _saveOffTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Serialize TimeOfDay to a string
+    String offTimeString = '${_offTime.hour}:${_offTime.minute}';
+    prefs.setString('offTime', offTimeString);
   }
 }

@@ -6,7 +6,7 @@ import android.content.Intent
 import android.os.PowerManager
 import android.util.Log
 
-class ScreenOffReceiver : BroadcastReceiver() {
+class ScreenOffReceiverOld : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLockTag = "ScreenScheduler:WakeLock"

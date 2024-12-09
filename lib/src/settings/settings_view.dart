@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:photoo/src/settings/widget_position.dart';
 import 'package:provider/provider.dart';
 
+import 'schedule_wakelock.dart';
 import 'settings_controller.dart';
 import 'settings_select_directory.dart';
 import 'app_state.dart';
+
+// ignore: constant_identifier_names
+const optionsPadding = 12.0;
+const spaceSize = 4.0;
 
 /// Displays the various settings that can be customized by the user.
 ///
@@ -27,156 +32,159 @@ class SettingsView extends StatelessWidget {
         title: const Text('Settings'),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(optionsPadding),
         // Glue the SettingsController to the theme selection DropdownButton.
         //
         // When a user selects a theme from the dropdown list, the
         // SettingsController is updated, which rebuilds the MaterialApp.
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: DropdownButton<ThemeMode>(
-                // Read the selected themeMode from the controller
-                value: controller.themeMode,
-                // Call the updateThemeMode method any time the user selects a theme.
-                onChanged: controller.updateThemeMode,
-                items: const [
-                  DropdownMenuItem(
-                    value: ThemeMode.system,
-                    child: Text('System Theme'),
-                  ),
-                  DropdownMenuItem(
-                    value: ThemeMode.light,
-                    child: Text('Light Theme'),
-                  ),
-                  DropdownMenuItem(
-                    value: ThemeMode.dark,
-                    child: Text('Dark Theme'),
-                  )
-                ],
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(optionsPadding),
+                child: DropdownButton<ThemeMode>(
+                  // Read the selected themeMode from the controller
+                  value: controller.themeMode,
+                  // Call the updateThemeMode method any time the user selects a theme.
+                  onChanged: controller.updateThemeMode,
+                  items: const [
+                    DropdownMenuItem(
+                      value: ThemeMode.system,
+                      child: Text('System Theme'),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.light,
+                      child: Text('Light Theme'),
+                    ),
+                    DropdownMenuItem(
+                      value: ThemeMode.dark,
+                      child: Text('Dark Theme'),
+                    )
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: FolderPicker(), // Use FolderPicker Widget
-            ),
-            const SizedBox(height: 10),
-            Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text("Transition time in minutes:",
-                        textAlign: TextAlign
-                            .left, // Aligns the text within its natural size
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16 // Makes the text bold
-                            )),
-                    const SizedBox(
-                        width:
-                            8), // Adds a small gap between the text and the slider
-                    Expanded(
-                      child: Slider(
-                        value: appState.transitionTime,
-                        max: 10,
-                        min: 1,
-                        divisions: 10,
-                        label: appState.transitionTime.round().toString(),
-                        onChanged: (double value) {
-                          appState.setTransitionTime(value);
+              const SizedBox(height: spaceSize),
+              const Padding(
+                padding: EdgeInsets.all(optionsPadding),
+                child: FolderPicker(), // Use FolderPicker Widget
+              ),
+              const SizedBox(height: spaceSize),
+              Padding(
+                  padding: const EdgeInsets.all(optionsPadding),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text("Transition time in minutes:",
+                          textAlign: TextAlign
+                              .left, // Aligns the text within its natural size
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16 // Makes the text bold
+                              )),
+                      const SizedBox(
+                          width:
+                              8), // Adds a small gap between the text and the slider
+                      Expanded(
+                        child: Slider(
+                          value: appState.transitionTime,
+                          max: 10,
+                          min: 1,
+                          divisions: 10,
+                          label: appState.transitionTime.round().toString(),
+                          onChanged: (double value) {
+                            appState.setTransitionTime(value);
+                          },
+                        ),
+                      ),
+                      Text("${appState.transitionTime.round()} min")
+                    ],
+                  )),
+              const SizedBox(height: spaceSize),
+              Padding(
+                  padding: const EdgeInsets.all(optionsPadding),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text("Show analog clock:",
+                          textAlign: TextAlign
+                              .left, // Aligns the text within its natural size
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16 // Makes the text bold
+                              )),
+                      const SizedBox(
+                          width:
+                              8), // Adds a small gap between the text and the slider
+                      Switch(
+                        // This bool value toggles the switch.
+                        value: appState.showClock,
+                        activeColor: Colors.blueGrey,
+                        onChanged: (bool value) {
+                          // This is called when the user toggles the switch.
+                          appState.setShowClock(value);
                         },
                       ),
-                    ),
-                    Text("${appState.transitionTime.round()} min")
-                  ],
-                )),
-            const SizedBox(height: 10),
-            Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text("Show analog clock:",
-                        textAlign: TextAlign
-                            .left, // Aligns the text within its natural size
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16 // Makes the text bold
-                            )),
-                    const SizedBox(
-                        width:
-                            8), // Adds a small gap between the text and the slider
-                    Switch(
-                      // This bool value toggles the switch.
-                      value: appState.showClock,
-                      activeColor: Colors.blueGrey,
-                      onChanged: (bool value) {
-                        // This is called when the user toggles the switch.
-                        appState.setShowClock(value);
-                      },
-                    ),
-                  ],
-                )),
-            const SizedBox(height: 10),
-            Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text("Analog clock position:",
-                        textAlign: TextAlign
-                            .left, // Aligns the text within its natural size
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16 // Makes the text bold
-                            )),
-                    const SizedBox(
-                        width:
-                            8), // Adds a small gap between the text and the slider
-                    WidgetPositionSelector(
-                        blockedPositions: [appState.dayWetherPosition],
-                        selectedPosition: appState.clockPosition,
-                        onPositionSelected: (newPosition) {
-                          appState.setClockPosition(newPosition);
-                        }),
-                  ],
-                )),
-            const SizedBox(height: 10),
-            Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const Text("Day and wether:",
-                        textAlign: TextAlign
-                            .left, // Aligns the text within its natural size
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16 // Makes the text bold
-                            )),
-                    const SizedBox(
-                        width:
-                            8), // Adds a small gap between the text and the slider
-                    WidgetPositionSelector(
-                        blockedPositions: [
-                          appState.clockPosition,
-                          Positions.center
-                        ],
-                        selectedPosition: appState.dayWetherPosition,
-                        onPositionSelected: (newPosition) {
-                          appState.setDayWetherPosition(newPosition);
-                        }),
-                  ],
-                ))
-          ],
+                    ],
+                  )),
+              const SizedBox(height: spaceSize),
+              Padding(
+                  padding: const EdgeInsets.all(optionsPadding),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text("Analog clock position:",
+                          textAlign: TextAlign
+                              .left, // Aligns the text within its natural size
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16 // Makes the text bold
+                              )),
+                      const SizedBox(
+                          width:
+                              8), // Adds a small gap between the text and the slider
+                      WidgetPositionSelector(
+                          blockedPositions: [appState.dayWeatherPosition],
+                          selectedPosition: appState.clockPosition,
+                          onPositionSelected: (newPosition) {
+                            appState.setClockPosition(newPosition);
+                          }),
+                    ],
+                  )),
+              const SizedBox(height: spaceSize),
+              Padding(
+                  padding: const EdgeInsets.all(optionsPadding),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const Text("Day and wether:",
+                          textAlign: TextAlign
+                              .left, // Aligns the text within its natural size
+                          style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16 // Makes the text bold
+                              )),
+                      const SizedBox(
+                          width:
+                              8), // Adds a small gap between the text and the slider
+                      WidgetPositionSelector(
+                          blockedPositions: [
+                            appState.clockPosition,
+                            Positions.center
+                          ],
+                          selectedPosition: appState.dayWeatherPosition,
+                          onPositionSelected: (newPosition) {
+                            appState.setDayWeatherPosition(newPosition);
+                          }),
+                    ],
+                  )),
+              const ScheduleWakelock()
+            ],
+          ),
         ),
       ),
     );

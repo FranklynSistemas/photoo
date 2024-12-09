@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:photoo/src/settings/app_state.dart';
+import 'package:provider/provider.dart';
 
 import 'features/photos_view.dart';
 import 'settings/settings_controller.dart';
@@ -12,9 +14,8 @@ import 'settings/settings_view.dart';
 
 const platform = MethodChannel('com.example.photoo/screen');
 
-/// The Widget that configures your application.
 class MyApp extends StatelessWidget {
-  const MyApp({
+  MyApp({
     super.key,
     required this.settingsController,
     required this.navigatorKey,
@@ -22,6 +23,8 @@ class MyApp extends StatelessWidget {
 
   final SettingsController settingsController;
   final GlobalKey<NavigatorState> navigatorKey;
+
+  bool _isScheduleInitialized = false; // Add a flag to track initialization
 
   // Convert TimeOfDay to milliseconds
   int TimeOfDayToMillis(TimeOfDay time) {
@@ -31,7 +34,7 @@ class MyApp extends StatelessWidget {
     return scheduleTime.millisecondsSinceEpoch;
   }
 
-// Save the schedule using native platform
+  // Save the schedule using native platform
   Future<void> _saveSchedule(TimeOfDay? onTime, TimeOfDay? offTime) async {
     if (onTime != null && offTime != null) {
       final onTimeInMillis = TimeOfDayToMillis(onTime);
@@ -58,8 +61,8 @@ class MyApp extends StatelessWidget {
     return false;
   }
 
-// Request exact alarm permission by redirecting to app settings
-  void _requestExactAlarmPermission() {
+  // Request exact alarm permission by redirecting to app settings
+  void _requestExactAlarmPermission(TimeOfDay onTime, TimeOfDay offTime) {
     print("Current context: ${navigatorKey.currentContext}");
     if (navigatorKey.currentContext != null) {
       showDialog(
@@ -77,7 +80,10 @@ class MyApp extends StatelessWidget {
                   await openAppSettings();
                   // After user returns from settings, check permission again
                   if (await Permission.scheduleExactAlarm.isGranted) {
-                    //TODO: What to do here
+                    await _saveSchedule(
+                      onTime,
+                      offTime,
+                    );
                   } else {
                     print("Exact Alarm permission not granted.");
                   }
@@ -94,41 +100,34 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Glue the SettingsController to the MaterialApp.
+    final appState = Provider.of<AppState>(context);
 
-    // Add post-frame callback
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Future.delayed(const Duration(milliseconds: 100));
-      if (Platform.isAndroid && await _needsExactAlarmPermission()) {
-        _requestExactAlarmPermission();
-      } else {
-        // Initialize daily activation and deactivation alarms
-        platform.invokeMethod('keepScreenOn');
-        await _saveSchedule(
-          TimeOfDay(hour: 23, minute: 08),
-          TimeOfDay(hour: 23, minute: 07),
-        );
+      if (!_isScheduleInitialized) {
+        _isScheduleInitialized = true; // Set the flag to true after first run
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (Platform.isAndroid && await _needsExactAlarmPermission()) {
+          _requestExactAlarmPermission(appState.onTime, appState.offTime);
+        } else {
+          // Initialize daily activation and deactivation alarms
+          platform.invokeMethod('keepScreenOn');
+          await _saveSchedule(
+            appState.onTime,
+            appState.offTime,
+          );
+        }
       }
     });
 
     // Add observer for app lifecycle
     WidgetsBinding.instance.addObserver(_AppLifecycleObserver());
-    // The ListenableBuilder Widget listens to the SettingsController for changes.
-    // Whenever the user updates their settings, the MaterialApp is rebuilt.
+
     return ListenableBuilder(
       listenable: settingsController,
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
           navigatorKey: navigatorKey,
-          // Providing a restorationScopeId allows the Navigator built by the
-          // MaterialApp to restore the navigation stack when a user leaves and
-          // returns to the app after it has been killed while running in the
-          // background.
           restorationScopeId: 'app',
-
-          // Provide the generated AppLocalizations to the MaterialApp. This
-          // allows descendant Widgets to display the correct translations
-          // depending on the user's locale.
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -138,24 +137,11 @@ class MyApp extends StatelessWidget {
           supportedLocales: const [
             Locale('en', ''), // English, no country code
           ],
-
-          // Use AppLocalizations to configure the correct application title
-          // depending on the user's locale.
-          //
-          // The appTitle is defined in .arb files found in the localization
-          // directory.
           onGenerateTitle: (BuildContext context) =>
               AppLocalizations.of(context)!.appTitle,
-
-          // Define a light and dark color theme. Then, read the user's
-          // preferred ThemeMode (light, dark, or system default) from the
-          // SettingsController to display the correct theme.
           theme: ThemeData(),
           darkTheme: ThemeData.dark(),
           themeMode: settingsController.themeMode,
-
-          // Define a function to handle named routes in order to support
-          // Flutter web url navigation and deep linking.
           onGenerateRoute: (RouteSettings routeSettings) {
             return MaterialPageRoute<void>(
               settings: routeSettings,
@@ -181,8 +167,7 @@ class _AppLifecycleObserver with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.detached) {
       print('Cancelling the wakeLock');
-      platform.invokeMethod(
-          'releaseScreenOn'); // Cancel alarms when app is closed or goes inactive
+      platform.invokeMethod('releaseScreenOn');
     }
     super.didChangeAppLifecycleState(state);
   }

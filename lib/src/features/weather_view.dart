@@ -18,7 +18,16 @@ class WeatherView extends StatelessWidget {
     if (description.contains('rain')) {
       return const Icon(Icons.umbrella, color: Colors.blue, size: iconSize);
     } else if (description.contains('clear')) {
-      return const Icon(Icons.wb_sunny, color: Colors.yellow, size: iconSize);
+     // Check if it is nighttime
+      final now = DateTime.now();
+      final isNightTime = _currentWeather?.sunset != null &&
+          _currentWeather?.sunrise != null &&
+          (now.isAfter(_currentWeather!.sunset!) || now.isBefore(_currentWeather.sunrise!));
+      if (isNightTime) {
+        return const Icon(Icons.nightlight_round, color: Colors.yellow, size: iconSize);
+      } else {
+        return const Icon(Icons.wb_sunny, color: Colors.yellow, size: iconSize);
+      }
     } else if (description.contains('cloud')) {
       return const Icon(Icons.cloud, color: Colors.grey, size: iconSize);
     } else if (description.contains('snow')) {

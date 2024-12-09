@@ -50,7 +50,7 @@ class _PhotosViewState extends State<PhotosView> {
     final selectedFolder = appState.selectedFolder;
     final clockPosition = appState.clockPosition;
     final showClock = appState.showClock;
-    final dayWetherPosition = appState.dayWetherPosition;
+    final dayWeatherPosition = appState.dayWeatherPosition;
 
     // Calculate the positioning values based on the selected clock position
     var positionedClock;
@@ -89,7 +89,7 @@ class _PhotosViewState extends State<PhotosView> {
     }
 
     var positionedDayWeather;
-    switch (dayWetherPosition) {
+    switch (dayWeatherPosition) {
       case Positions.topLeft:
           positionedDayWeather = const Positioned(
               top: padding,

@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.PowerManager
 
-class ScreenOnReceiver : BroadcastReceiver() {
+class ScreenOnReceiverOld : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
         val wakeLock =
